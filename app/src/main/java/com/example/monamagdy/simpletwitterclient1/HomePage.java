@@ -16,7 +16,7 @@ import android.app.ProgressDialog;
 import android.net.NetworkInfo;
 import android.content.Context;
 import com.twitter.sdk.android.Twitter;
-
+import android.content.SharedPreferences;
 import android.os.Environment;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
@@ -48,7 +48,10 @@ import io.fabric.sdk.android.Fabric;
  */
 public class HomePage extends Activity {
     ProgressDialog dialog1;
-    int g=0;
+    public static final String MY_PREFS_NAME = "MyPrefsFile";
+    SharedPreferences.Editor editor;
+    SharedPreferences prefs;
+    int folsize;
     FileOutputStream out;
     boolean Network_state = true;
     ArrayList<Bitmap> pics_list = new ArrayList<Bitmap>();
@@ -59,10 +62,16 @@ public class HomePage extends Activity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.options);
+        // MY_PREFS_NAME - a static String variable like:
+
+        editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+
         final ListView listview = (ListView) findViewById(R.id.list1);
         String []options = {"Followers"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1, options);
         listview.setAdapter(adapter);
+         prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+
         if (!Fabric.isInitialized()) {
             TwitterAuthConfig authConfig = new TwitterAuthConfig(MainActivity.TWITTER_KEY,MainActivity.TWITTER_SECRET);
             Fabric.with(this.getApplicationContext(), new Twitter(authConfig));
@@ -72,10 +81,11 @@ public class HomePage extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // TODO Auto-generated method stub
-                //dialog1 = ProgressDialog.show(getApplicationContext(), "", "Saving...");
+                int Size;
                 Network_state= isNetworkAvailable();
                 if(Network_state)
-                { dialog1 = new ProgressDialog(HomePage.this); // this = YourActivity
+                {
+                    dialog1 = new ProgressDialog(HomePage.this); // this = YourActivity
                     dialog1.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                     dialog1.setMessage("Loading followers..");
                     dialog1.setIndeterminate(false);
@@ -90,7 +100,8 @@ public class HomePage extends Activity {
                         pics_list.clear();
                         name_list=    read("/data/data/com.example.monamagdy.simpletwitterclient1/cache/name_list.txt");
                         bio_list=     read("/data/data/com.example.monamagdy.simpletwitterclient1/cache/bio_list.txt");
-                         for(int i=0;i<5;i++)
+                         Size = prefs.getInt("Size", 0); //0 is the default value.
+                        for(int i=0;i<Size;i++)
                          readImage("/data/data/com.example.monamagdy.simpletwitterclient1/cache/pics_list.png");
                         Intent intent = new Intent(HomePage.this, Home.class);
                         intent.putExtra("NAME", name_list);
@@ -140,11 +151,13 @@ public class HomePage extends Activity {
                     {
 
                     }
-            
+                    //TODO dont load activity unless all pictures are parsed
                     //   Log.i(" success", "" + result.data.users.toString());
                     Log.i("Get success", "" + result.data.users.size());
-                   // for (int i = 0; i < 5; i++) {
-                          for (int i = 0; i < result.data.users.size(); i++) {
+
+                         for (int i = 0; i < result.data.users.size(); i++) {
+                        editor.putInt("Size", result.data.users.size());
+                        editor.commit();
                         user = result.data.users.get(i);
                         name_list.add(user.name);
                         bio_list.add(user.description);
@@ -234,7 +247,6 @@ public class HomePage extends Activity {
             BufferedInputStream buffer=new BufferedInputStream(gigi);
             BitmapFactory.decodeStream(buffer, null, options);
             bitmap = BitmapFactory.decodeStream(buffer,null,options);
-            Log.d("bi",String.valueOf(bitmap));
            // buffer.reset();
         } catch (Exception e) {
             e.printStackTrace();
