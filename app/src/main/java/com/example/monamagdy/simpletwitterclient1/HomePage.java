@@ -140,11 +140,11 @@ public class HomePage extends Activity {
                     {
 
                     }
-                    //TODO dont load activity unless all pictures are parsed
+            
                     //   Log.i(" success", "" + result.data.users.toString());
                     Log.i("Get success", "" + result.data.users.size());
-                    for (int i = 0; i < 5; i++) {
-                        //  for (int i = 0; i < result.data.users.size(); i++) {
+                   // for (int i = 0; i < 5; i++) {
+                          for (int i = 0; i < result.data.users.size(); i++) {
                         user = result.data.users.get(i);
                         name_list.add(user.name);
                         bio_list.add(user.description);
@@ -159,7 +159,7 @@ public class HomePage extends Activity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        //  if (i == result.data.users.size() - 1)
+                         if (i == result.data.users.size() - 1)
                         {
                             Intent intent = new Intent(HomePage.this, Home.class);
                             if (isExternalStorageWritable()) {
